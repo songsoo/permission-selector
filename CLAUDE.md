@@ -30,140 +30,21 @@
 
 ---
 
-## 폴더 구조
-
-```
-src/
-├── main.jsx
-├── App.jsx
-├── components/
-│   ├── MenuTree.jsx         # 좌측: 권한 메뉴 트리
-│   ├── PermissionList.jsx   # 중앙: 상세 권한 목록
-│   ├── CartPanel.jsx        # 우측: 선택 현황 패널
-│   ├── SearchInput.jsx      # 재사용 검색 인풋
-│   ├── HelpTooltip.jsx      # 물음표 툴팁 컴포넌트
-│   ├── Toast.jsx            # 토스트 알림
-│   ├── OnboardingTour.jsx   # 최초 방문자용 온보딩 투어
-│   ├── icons.jsx            # 공용 SVG 아이콘 (LockIcon 등)
-│   └── CopyModal.jsx        # 복사 전 경고 모달
-├── lib/
-│   ├── state.js             # initialState + reducer
-│   ├── jsonLoader.js        # menus JSON 파싱/정규화
-│   ├── tree.js              # 트리 유틸 (최하위 노드 판별, orphan perm 계산 등)
-│   ├── validate.js          # 선택 유효성 검사
-│   ├── clipboard.js         # 클립보드 텍스트/HTML 포맷 생성
-│   ├── shortcuts.js         # 단축 선택(shortcut chip) cascade 전개
-│   └── useTooltip.js        # hover/터치 겸용 툴팁 오픈 상태 훅 (pointer: coarse 감지)
-├── data/
-│   ├── menus.json           # 메뉴/권한 원본 데이터
-│   ├── helpTexts.js         # 메뉴/권한 도움말 텍스트 오버라이드
-│   └── shortcuts.js         # 단축 선택 정의 (SHORTCUTS)
-└── styles/
-    ├── base.css             # CSS 변수, 리셋, 공통
-    ├── layout.css           # 3단 레이아웃, 헤더
-    ├── tree.css             # 트리, 체크박스, 뱃지
-    ├── panel.css            # 카트 패널, 선택 항목
-    └── modals.css           # 모달, 토스트
-```
-
----
-
 ## 입력 데이터 구조
 
-데이터는 외부 파일/API에서 불러오지 않고 소스에 직접 입력한다.
-메뉴는 `scopeRefs` 배열로 자신이 가진 권한 코드를 가리키고, 실제 권한 설명·결재 여부는 별도 최상위 `permissions` **트리**에서 조회한다.
+데이터는 외부 파일/API에서 불러오지 않고 소스에 직접 입력한다 (`src/data/menus.json`, `jsonLoader.js`가 정규화). 정확한 원본/정규화 구조는 소스 참고.
 
-```js
-{
-  collectedAt: "2026-06-02T09:00:00.000Z",
-  menus: [
-    { nodeId: "m_bbca674c", title: "사용자 관리", parentId: null, restricted: false, scopeRefs: ["p_3a7f92b1", "p_9f2c1a44"] },
-    { nodeId: "m_08196528", title: "역할 설정",   parentId: "m_bbca674c", restricted: false, scopeRefs: ["p_3a7f92b1", "p_7b3e8d12"] },
-    { nodeId: "m_373b9050", title: "숨김메뉴",    parentId: null, restricted: true,  scopeRefs: [] },
-  ],
-  permissions: [   // PermNode[] 트리 — leaf(nodes: [])만 실제 권한
-    { code: "p_group_abc", nodes: [
-      { code: "p_3a7f92b1", label: "조회",              nodes: [] },
-      { code: "p_9f2c1a44", label: "마스킹 해제",       approvalNeeded: true, nodes: [] },
-      { code: "p_7b3e8d12", label: "다운로드(개인정보)", approvalNeeded: true, nodes: [] },
-    ]},
-  ],
-}
-```
+**코드만 봐서는 알기 어려운 규칙:**
 
-**필드 정의:**
-
-| 필드 | 타입 | 필수 | 설명 |
-| --- | --- | --- | --- |
-| `collectedAt` | string (ISO 8601) | optional | 데이터 수집 시각. 메타 정보이며 앱 로직에는 사용하지 않음 |
-| `menus` | array | ✓ | 메뉴 트리 노드 목록 |
-| `menus[].nodeId` | string | ✓ | 메뉴 고유 ID (`m_xxxxxxxx` 형식의 불투명 문자열) |
-| `menus[].title` | string | ✓ | 메뉴 표시명 |
-| `menus[].parentId` | string \| null | ✓ | 부모 메뉴 nodeId, 루트면 `null` |
-| `menus[].restricted` | boolean | optional (default `false`) | 좌측 메뉴 미노출 여부 |
-| `menus[].scopeRefs` | string[] | ✓ (빈 배열 허용) | 이 메뉴가 가진 상세 권한 코드 목록 (`permissions` 트리 leaf의 `code`를 참조) |
-| `permissions` | PermNode[] | ✓ | 권한 노드 트리. DFS로 leaf(`nodes: []`)만 추출해 실제 권한으로 사용 |
-
-**PermNode 구조:**
-
-```js
-{
-  code: string,             // 권한 코드 (고유 식별자)
-  label?: string,           // leaf에만 있음. 권한 설명
-  approvalNeeded?: boolean, // leaf에만 있음. true면 결재 필요 (default: false)
-  nodes: PermNode[],        // 빈 배열이면 leaf(실제 권한), 아니면 그룹 노드
-}
-```
-
-**중요한 데이터 규칙:**
-
-- **최하위(leaf) 판별은 `scopeRefs` 유무가 아니라 메뉴 트리의 자식 유무로 결정** — `buildTree` 후 `nodes.length === 0`인 노드가 leaf(선택 가능)
-- 중간 노드: 체크박스 없음, 접기/펼치기만 가능
-- 최하위 노드: 체크박스 있음, 선택 가능 — `scopeRefs`가 비어있어도 선택 가능
-- `buildTree` 시 `parentId`가 map에 없는 노드는 루트로 처리 (데이터에 최상위 컨테이너 노드가 없는 경우 대응)
-- 서로 다른 메뉴가 같은 `permissionCode`를 참조하면 동일 권한으로 취급 (상세 권한 패널의 "전체" 보기에서는 `permissionCode` 기준 중복 제거)
-- `restricted: true` = 좌측 메뉴에 없고, 다른 페이지에서 링크로만 접근 가능한 페이지
+- `restricted: true` = 좌측 메뉴에 없고, 다른 페이지에서 링크로만 접근 가능한 페이지 (숨김 처리일 뿐 접근 자체를 막는 게 아님)
 - `permissions` 트리에 어떤 메뉴도 참조하지 않는 leaf(orphan)가 있을 수 있음. UI에는 노출되지 않음
-- `scopeRefs`에 `permissions` 트리 leaf에 없는 코드가 있으면 무시 (방어적 처리)
-
-**정규화 (`jsonLoader.js`):**
-
-`flatPermissions(nodes)` DFS로 `permissions` 트리에서 leaf(`nodes: []`)만 추출해 lookup map을 구성한 뒤, 각 메뉴의 `scopeRefs`를 내부 형태로 변환한다. 이후의 모든 코드(`MenuTree`, `PermissionList`, `validate`, `clipboard`, `CartPanel`)는 이 정규화된 형태(`menu.permissions[]`)를 그대로 사용한다.
-
-```js
-{
-  nodeId, title, label, parentId, restricted,
-  shortcuts: [ /* SHORTCUTS[nodeId], 없으면 [] */ ],
-  permissions: [
-    { permissionCode, label, requiresApproval, helpText, menuHelpText }
-  ]
-}
-```
-
-- `approvalNeeded: true` → `requiresApproval: true`, 생략/false → `requiresApproval: false`
-- `helpText`/`menuDescriptions`/`menuOverrides`는 `src/data/helpTexts.js`(`HELP_TEXTS`)가 우선, 없으면 원본 데이터의 인라인 값(`node.helpText`, `m.label`, `m.permissionHelpText`)으로 fallback
-- `menuHelpText`는 메뉴별 권한 설명 오버라이드(같은 권한이라도 메뉴 맥락에 따라 다른 도움말 표시용)
-- `shortcuts`는 `src/data/shortcuts.js`(`SHORTCUTS`, nodeId 기준)에서 조회 — 아래 "단축 선택(shortcuts)" 참고
+- 서로 다른 메뉴가 같은 `permissionCode`를 참조하면 동일 권한으로 취급 (상세 권한 패널의 "전체" 보기에서는 중복 제거)
 
 ---
 
 ## 내부 상태 (state.js)
 
-```js
-initialState = {
-  menus: [], // 파싱된 전체 메뉴 배열
-  selectedMenuSeqs: new Set(), // 선택된 최하위 메뉴 seq
-  selectedPermCodes: new Set(), // 선택된 상세 권한 permissionCode
-  focusedMenuSeq: null, // 현재 우측 상세권한 필터링 기준 메뉴
-  menuSearch: "", // 메뉴 검색어
-  permSearch: "", // 상세 권한 검색어
-  permFilter: null, // 특정 permissionCode로 좌측 메뉴 트리를 필터링할 때 사용
-};
-
-// reducer action types
-// SET_MENUS, TOGGLE_MENU, TOGGLE_PERM, SET_FOCUSED_MENU, SET_PERM_FILTER,
-// SET_MENU_SEARCH, SET_PERM_SEARCH, ACTIVATE_SHORTCUT, DEACTIVATE_SHORTCUT, RESET
-```
+`initialState`/`reducer` 정의 및 필드는 소스 참고. action type: `SET_MENUS`, `TOGGLE_MENU`, `TOGGLE_PERM`, `SET_FOCUSED_MENU`, `SET_PERM_FILTER`, `SET_MENU_SEARCH`, `SET_PERM_SEARCH`, `ACTIVATE_SHORTCUT`, `DEACTIVATE_SHORTCUT`, `RESET`.
 
 - `SET_PERM_FILTER`: 같은 `permCode`를 다시 dispatch하면 토글 해제(`null`)
 - `ACTIVATE_SHORTCUT` / `DEACTIVATE_SHORTCUT`: `shortcut.menus`/`shortcut.perms`를 일괄 추가/제거. `DEACTIVATE_SHORTCUT`이 현재 `focusedMenuSeq`를 포함하면 포커스도 해제
@@ -335,21 +216,7 @@ initialState = {
 
 ## tree.js 핵심 유틸
 
-```js
-// 최하위 노드 여부 — nodes 배열이 빈 노드 (buildTree 이후 호출)
-// scopeRefs 유무와 무관: 자식이 없으면 무조건 leaf (선택 가능)
-isLeaf(node)
-
-// 특정 노드의 조상 경로 반환 (breadcrumb용)
-getAncestorPath(menus, nodeId) → [{ nodeId, title }, ...]
-
-// 트리 구조로 변환
-// parentId가 map에 없는 노드(데이터에 최상위 컨테이너 없는 경우)도 루트로 처리
-buildTree(menus) → [{ ...node, nodes: [...] }]
-
-// 선택된 메뉴 어디에도 속하지 않은 선택된 상세 권한 목록 (permissionCode 기준 중복 제거)
-computeOrphanPerms(menus, selectedMenuSeqs, selectedPermCodes) → [{ permissionCode, label, requiresApproval, ... }]
-```
+`isLeaf`, `getAncestorPath`, `buildTree`, `computeOrphanPerms` 제공 — 시그니처와 동작은 소스 참고.
 
 **단축 선택 (shortcuts):**
 
@@ -357,36 +224,9 @@ computeOrphanPerms(menus, selectedMenuSeqs, selectedPermCodes) → [{ permission
 
 ---
 
-## CSS 변수 (base.css)
+## CSS 변수
 
-```css
-:root {
-  --brand: #ff3c78;
-  --brand-soft: #fff0f5;
-  --brand-hover: #e0235f;
-
-  --bg: #ffffff;
-  --surface: #fafafa;
-  --surface-2: #f4f4f5;
-  --border: #ebebe8;
-  --border-strong: #d4d4d8;
-
-  --text: #18181b;
-  --text-muted: #71717a;
-  --text-faint: #a1a1aa;
-
-  --success: #16a34a;
-  --warn: #ca8a04;
-  --warn-soft: #fefce8;
-  --danger: #dc2626;
-  --danger-soft: #fef2f2;
-
-  --r-sm: 4px;
-  --r-md: 6px;
-  --r-lg: 8px;
-  --r-xl: 12px;
-}
-```
+`base.css`의 `:root`에 정의. 주색은 `--brand`(#FF3C78, 브랜딩 참고), 그 외 색상/radius 변수는 소스 참고 — 신규 색상 추가 시 여기 문서를 따로 갱신하지 말고 `base.css`를 단일 소스로 유지할 것.
 
 ---
 
