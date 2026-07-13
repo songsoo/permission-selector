@@ -48,8 +48,7 @@ function EyeOffIcon({ class: cls }) {
 }
 
 function HiddenMenuIcon() {
-  const { open, ref, handlers } = useTooltip();
-  const bubbleRef = useRef(null);
+  const { open, ref, bubbleRef, handlers, bubbleHandlers } = useTooltip();
   const pos = useTooltipPosition(open, ref, bubbleRef);
 
   return (
@@ -59,6 +58,7 @@ function HiddenMenuIcon() {
         <Portal>
           <span
             ref={bubbleRef}
+            {...bubbleHandlers}
             class={`tree-node-hidden-tooltip${pos?.below ? " is-below" : ""}`}
             style={
               pos
@@ -211,8 +211,7 @@ function AdminSidebarDiagram() {
 }
 
 function HiddenToggleButton({ showHidden, onToggle }) {
-  const { open, ref, handlers } = useTooltip();
-  const bubbleRef = useRef(null);
+  const { open, ref, bubbleRef, handlers, bubbleHandlers } = useTooltip();
   const pos = useTooltipPosition(open, ref, bubbleRef, {
     fallbackWidth: 300,
     fallbackHeight: 260,
@@ -231,6 +230,7 @@ function HiddenToggleButton({ showHidden, onToggle }) {
         <Portal>
           <span
             ref={bubbleRef}
+            {...bubbleHandlers}
             class={`tree-hidden-toggle-tooltip${pos?.below ? " is-below" : ""}`}
             style={
               pos
@@ -267,8 +267,7 @@ function InfoIcon() {
 }
 
 function MenuDescIcon({ text }) {
-  const { open, ref, handlers } = useTooltip();
-  const bubbleRef = useRef(null);
+  const { open, ref, bubbleRef, handlers, bubbleHandlers } = useTooltip();
   const pos = useTooltipPosition(open, ref, bubbleRef, { fallbackWidth: 240 });
   const { nodes, terms } = parseGlossaryText(text);
 
@@ -279,6 +278,7 @@ function MenuDescIcon({ text }) {
         <Portal>
           <span
             ref={bubbleRef}
+            {...bubbleHandlers}
             class={`tree-node-desc-tooltip${pos?.below ? " is-below" : ""}`}
             style={
               pos
@@ -355,8 +355,13 @@ function ShortcutChip({
   hiddenSet,
   onJumpToMenu,
 }) {
-  const { open: tipOpen, ref: wrapRef, handlers: tipHandlers } = useTooltip();
-  const tipPanelRef = useRef(null);
+  const {
+    open: tipOpen,
+    ref: wrapRef,
+    bubbleRef: tipPanelRef,
+    handlers: tipHandlers,
+    bubbleHandlers: tipBubbleHandlers,
+  } = useTooltip();
   const tipPos = useSidePanelPosition(tipOpen, wrapRef, tipPanelRef, {
     fallbackWidth: 220,
     fallbackHeight: 160,
@@ -419,6 +424,7 @@ function ShortcutChip({
         <Portal>
         <span
           ref={tipPanelRef}
+          {...tipBubbleHandlers}
           class="tree-node-chip-tooltip"
           style={
             tipPos

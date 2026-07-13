@@ -1,11 +1,9 @@
-import { useRef } from "preact/hooks";
 import { useTooltip } from "../lib/useTooltip.js";
 import { useTooltipPosition } from "../lib/tooltipPosition.js";
 import Portal from "../lib/Portal.jsx";
 
 export default function HelpTooltip({ text }) {
-  const { open, ref, handlers } = useTooltip();
-  const bubbleRef = useRef(null);
+  const { open, ref, bubbleRef, handlers, bubbleHandlers } = useTooltip();
   const pos = useTooltipPosition(open, ref, bubbleRef);
 
   return (
@@ -15,6 +13,7 @@ export default function HelpTooltip({ text }) {
         <Portal>
           <span
             ref={bubbleRef}
+            {...bubbleHandlers}
             class={`help-tooltip-bubble${pos?.below ? " is-below" : ""}`}
             style={
               pos

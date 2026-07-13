@@ -57,12 +57,12 @@ function PermCard({
   onFilter,
   isOrphan,
 }) {
-  const { open, ref, show, hide, longPress } = useTooltip();
+  const { open, ref, bubbleRef, bubbleHandlers, show, hide, longPress } =
+    useTooltip();
   const [previewing, setPreviewing] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
   const descRef = useRef(null);
   const staticRef = useRef(null);
-  const bubbleRef = useRef(null);
 
   const nameTerms = useMemo(
     () => parseGlossaryText(p.label).terms,
@@ -222,6 +222,7 @@ function PermCard({
             <Portal>
               <span
                 ref={bubbleRef}
+                {...bubbleHandlers}
                 class={`perm-helptext-bubble${pos.below ? " is-below" : ""}`}
                 style={{ top: pos.top + "px", left: pos.left + "px" }}
               >
