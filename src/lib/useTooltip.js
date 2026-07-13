@@ -71,7 +71,8 @@ export function useTooltip() {
     if (!open) return;
     function onDocPointerDown(e) {
       const insideTrigger = ref.current && ref.current.contains(e.target);
-      const insideBubble = bubbleRef.current && bubbleRef.current.contains(e.target);
+      const insideBubble =
+        bubbleRef.current && bubbleRef.current.contains(e.target);
       if (!insideTrigger && !insideBubble) {
         setOpen(false);
         // 터치에서는 바깥을 탭한 순간의 click이 그 아래 요소(체크박스, 필터 버튼 등)에
@@ -101,7 +102,7 @@ export function useTooltip() {
       }
     : {
         onMouseEnter: show,
-        onMouseLeave: () => hide(80),
+        onMouseLeave: () => hide(120),
       };
 
   // 버블(Portal 렌더링)로 마우스가 넘어가도 열림 유지 — 트리거와 DOM상 분리돼 있어
@@ -111,7 +112,7 @@ export function useTooltip() {
     ? {}
     : {
         onMouseEnter: show,
-        onMouseLeave: () => hide(80),
+        onMouseLeave: () => hide(120),
       };
 
   return {

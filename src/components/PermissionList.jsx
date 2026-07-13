@@ -64,10 +64,7 @@ function PermCard({
   const descRef = useRef(null);
   const staticRef = useRef(null);
 
-  const nameTerms = useMemo(
-    () => parseGlossaryText(p.label).terms,
-    [p.label],
-  );
+  const nameTerms = useMemo(() => parseGlossaryText(p.label).terms, [p.label]);
   const descNodes = useMemo(
     () => parseGlossaryText(p.label, query).nodes,
     [p.label, query],
@@ -136,7 +133,7 @@ function PermCard({
       // 터치에서는 tap 종료 후 브라우저가 호환용 mouseenter를 합성 발생시켜
       // 롱프레스 판정과 무관하게 show()가 불려버리므로, hover는 non-coarse에서만 연결한다.
       onMouseEnter={isCoarsePointer() ? undefined : show}
-      onMouseLeave={isCoarsePointer() ? undefined : () => hide(80)}
+      onMouseLeave={isCoarsePointer() ? undefined : () => hide(150)}
       onPointerDown={() => {
         // 터치에서는 hover가 없으므로 약 0.5초 꾹 누르면 도움말을 열어준다 (짧은 탭은 그대로 토글)
         if (isCoarsePointer() && hasContent) longPress.start();
@@ -168,9 +165,7 @@ function PermCard({
             if (e.animationName === "perm-marquee") setPreviewing(false);
           }}
         >
-          <span class="perm-desc-copy">
-            {descNodes}
-          </span>
+          <span class="perm-desc-copy">{descNodes}</span>
           <span class="perm-desc-copy" aria-hidden="true">
             {descNodes}
           </span>
