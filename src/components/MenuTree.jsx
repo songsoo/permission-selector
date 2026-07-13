@@ -864,7 +864,7 @@ function MenuTree({ state, dispatch, onLeafSelected }, ref) {
       if (state.focusedMenuSeq !== seq) {
         dispatch({ type: "SET_FOCUSED_MENU", menuSeq: seq });
       }
-      jumpToMenu(seq);
+      jumpToMenu(seq, { flashes: 0 });
     },
     [dispatch, jumpToMenu, state.focusedMenuSeq],
   );
