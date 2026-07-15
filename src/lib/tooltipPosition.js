@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect } from "preact/hooks";
+import { useState, useLayoutEffect, useRef } from "preact/hooks";
 
 // 앵커 기준 위/아래 중 공간이 넉넉한 쪽에 배치하고, 좌우·상하 모두
 // 뷰포트 밖으로 나가지 않도록 clamp한다. bubbleWidth/Height는 실제 렌더된
@@ -33,17 +33,46 @@ export function computeTooltipRect({
 export function useTooltipPosition(open, anchorRef, bubbleRef, opts = {}) {
   const { fallbackWidth = 220, fallbackHeight = 60, ...rest } = opts;
   const [pos, setPos] = useState(null);
+  const measuredRef = useRef({ width: 0, height: 0 });
 
   useLayoutEffect(() => {
     if (!open || !anchorRef.current) {
       setPos(null);
+      measuredRef.current = { width: 0, height: 0 };
       return;
     }
     const anchorRect = anchorRef.current.getBoundingClientRect();
     const bubbleWidth = bubbleRef.current?.offsetWidth || fallbackWidth;
     const bubbleHeight = bubbleRef.current?.offsetHeight || fallbackHeight;
+    measuredRef.current = { width: bubbleWidth, height: bubbleHeight };
     setPos(computeTooltipRect({ anchorRect, bubbleWidth, bubbleHeight, ...rest }));
   }, [open]);
+
+  // 위 effect는 아직 말풍선이 DOM에 없어(pos===null이라 렌더 안 됨) fallback 크기로만
+  // 계산한다. 말풍선이 실제로 마운트되면 내용(글로서리 노트 등)에 따라 실측 높이가
+  // fallback과 달라질 수 있어, 여기서 실측값으로 한 번 더 보정한다. deps 없이 매
+  // 렌더마다 확인하되 실측값이 이전과 같으면 setPos를 호출하지 않아 무한 루프를 막는다.
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current || !bubbleRef.current) return;
+    const actualWidth = bubbleRef.current.offsetWidth;
+    const actualHeight = bubbleRef.current.offsetHeight;
+    if (
+      actualWidth === measuredRef.current.width &&
+      actualHeight === measuredRef.current.height
+    ) {
+      return;
+    }
+    measuredRef.current = { width: actualWidth, height: actualHeight };
+    const anchorRect = anchorRef.current.getBoundingClientRect();
+    setPos(
+      computeTooltipRect({
+        anchorRect,
+        bubbleWidth: actualWidth,
+        bubbleHeight: actualHeight,
+        ...rest,
+      }),
+    );
+  });
 
   return pos;
 }
