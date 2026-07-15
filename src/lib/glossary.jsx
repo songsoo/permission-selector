@@ -72,12 +72,12 @@ function expandGlossaryTerms(initialTerms) {
 }
 
 // 이미 열려있는 설명 툴팁 하단에 덧붙일 "관련 용어" 박스. 용어 설명 안에 중첩된 용어도 함께 펼쳐 표시한다.
-export function GlossaryNotes({ terms }) {
+export function GlossaryNotes({ terms, withDivider = true }) {
   const expanded = expandGlossaryTerms(terms ?? []);
   if (expanded.length === 0) return null;
   return (
     <>
-      <hr class="glossary-notes-divider" />
+      {withDivider && <hr class="glossary-notes-divider" />}
       <span class="glossary-notes">
         {expanded.map((term) => (
           <span class="glossary-note-row" key={term}>

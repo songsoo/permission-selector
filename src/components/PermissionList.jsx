@@ -233,7 +233,12 @@ function PermCard({
                     </span>
                   </>
                 )}
-                <GlossaryNotes terms={glossaryTerms} />
+                <GlossaryNotes
+                  terms={glossaryTerms}
+                  withDivider={Boolean(
+                    p.helpText || (showMenuHelpText && p.menuHelpText),
+                  )}
+                />
               </span>
             </Portal>
           );
