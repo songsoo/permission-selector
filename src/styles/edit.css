@@ -195,12 +195,18 @@
   background: var(--brand);
 }
 
+/* 현재 세션에서 실제로 값이 바뀐 경우 has-text보다 우선 표시 */
+.edit-perm-dot.is-live {
+  background: var(--warn);
+}
+
 /* 편집 탭 좌측 리스트 공통: 현재 세션 변경(is-live) 표시. 메뉴/권한 구조 탭은 과거 저장 이력(is-history)도 함께 표시 */
 .edit-mt-dot {
-  width: 5px;
-  height: 5px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+  background: var(--border-strong);
 }
 
 .edit-mt-dot.is-live {

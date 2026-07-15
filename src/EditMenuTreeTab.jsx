@@ -22,11 +22,15 @@ function genMenuTitle(siblingTitles) {
   return `새 메뉴(${n})`;
 }
 
-// 좌측 리스트 변경 표시 점: 현재 세션에서 바꾼 게 있으면 우선 표시, 없으면 과거 저장 이력만 표시
+// 좌측 리스트 변경 표시 점: 현재 세션 변경(is-live) > 과거 저장 이력(is-history) > 변경 없음(회색) 순으로 표시
 function ChangeDot({ isLive, isHistory }) {
-  if (isLive) return <span class="edit-mt-dot is-live" title="현재 변경한 내용이 있어요" />;
-  if (isHistory) return <span class="edit-mt-dot is-history" title="이전에 저장된 변경 이력이 있어요" />;
-  return null;
+  const cls = isLive ? " is-live" : isHistory ? " is-history" : "";
+  const title = isLive
+    ? "현재 변경한 내용이 있어요"
+    : isHistory
+      ? "이전에 저장된 변경 이력이 있어요"
+      : undefined;
+  return <span class={`edit-mt-dot${cls}`} title={title} />;
 }
 
 function MenuTreeRow({

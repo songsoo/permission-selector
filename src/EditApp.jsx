@@ -41,12 +41,6 @@ function getCascadeOptions(
   return options;
 }
 
-// 좌측 리스트 변경 표시 점: 세션 시작(또는 마지막 저장) 시점 대비 실제로 값이 달라졌을 때만 표시
-function ChangeDot({ isLive }) {
-  if (!isLive) return null;
-  return <span class="edit-mt-dot is-live" title="현재 변경한 내용이 있어요" />;
-}
-
 export default function EditApp({ onExit }) {
   const [tab, setTab] = useState(() => {
     const saved = sessionStorage.getItem("edit_tab");
@@ -845,9 +839,13 @@ export default function EditApp({ onExit }) {
                     onClick={() => setSelectedMenuSeq(m.nodeId)}
                   >
                     <span
-                      class={`edit-perm-dot${count > 0 ? " has-text" : ""}`}
+                      class={`edit-perm-dot${count > 0 ? " has-text" : ""}${changedShortcutMenuSeqs.has(m.nodeId) ? " is-live" : ""}`}
+                      title={
+                        changedShortcutMenuSeqs.has(m.nodeId)
+                          ? "현재 변경한 내용이 있어요"
+                          : undefined
+                      }
                     />
-                    <ChangeDot isLive={changedShortcutMenuSeqs.has(m.nodeId)} />
                     <span class="edit-perm-name">{m.title}</span>
                     {m.restricted && <HiddenBadge />}
                     {count > 0 && <span class="edit-sc-count">{count}개</span>}
@@ -1108,9 +1106,13 @@ export default function EditApp({ onExit }) {
                     onClick={() => setSelectedTerm(term)}
                   >
                     <span
-                      class={`edit-perm-dot${hasText ? " has-text" : ""}`}
+                      class={`edit-perm-dot${hasText ? " has-text" : ""}${changedGlossaryTerms.has(term) ? " is-live" : ""}`}
+                      title={
+                        changedGlossaryTerms.has(term)
+                          ? "현재 변경한 내용이 있어요"
+                          : undefined
+                      }
                     />
-                    <ChangeDot isLive={changedGlossaryTerms.has(term)} />
                     <span class="edit-perm-name">{term}</span>
                   </div>
                 );
