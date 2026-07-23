@@ -19,12 +19,23 @@ export function parseGlossaryText(text, query, opts) {
     }
     const term = m[1];
     if (getActiveGlossary()[term] != null) {
-      nodes.push(
+      const highlighted = highlight(term, query);
+      const rendered = opts?.renderTerm ? (
+        opts.renderTerm(
+          term,
+          <>
+            {edit ? "@" : ""}
+            {highlighted}
+          </>,
+          key++,
+        )
+      ) : (
         <span class={edit ? "glossary-term-edit" : "glossary-term"} key={key++}>
           {edit ? "@" : ""}
-          {highlight(term, query)}
-        </span>,
+          {highlighted}
+        </span>
       );
+      nodes.push(rendered);
       if (!terms.includes(term)) terms.push(term);
     } else {
       nodes.push(highlight(term, query));
@@ -53,7 +64,7 @@ export function mergeGlossaryTerms(...termLists) {
 }
 
 // 용어 설명 안에 또 다른 [[용어]]가 있으면 그 용어도 재귀적으로 포함시킨다(순환 참조 방지)
-function expandGlossaryTerms(initialTerms) {
+export function expandGlossaryTerms(initialTerms) {
   const result = [];
   const seen = new Set();
   const queue = [...initialTerms];
@@ -71,6 +82,21 @@ function expandGlossaryTerms(initialTerms) {
   return result;
 }
 
+function renderGlossaryRows(expanded) {
+  return (
+    <span class="glossary-notes">
+      {expanded.map((term) => (
+        <span class="glossary-note-row" key={term}>
+          <span class="glossary-note-term">{term}</span>
+          <span class="glossary-note-desc">
+            {parseGlossaryText(getActiveGlossary()[term]).nodes}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 // 이미 열려있는 설명 툴팁 하단에 덧붙일 "관련 용어" 박스. 용어 설명 안에 중첩된 용어도 함께 펼쳐 표시한다.
 export function GlossaryNotes({ terms, withDivider = true }) {
   const expanded = expandGlossaryTerms(terms ?? []);
@@ -78,16 +104,7 @@ export function GlossaryNotes({ terms, withDivider = true }) {
   return (
     <>
       {withDivider && <hr class="glossary-notes-divider" />}
-      <span class="glossary-notes">
-        {expanded.map((term) => (
-          <span class="glossary-note-row" key={term}>
-            <span class="glossary-note-term">{term}</span>
-            <span class="glossary-note-desc">
-              {parseGlossaryText(getActiveGlossary()[term]).nodes}
-            </span>
-          </span>
-        ))}
-      </span>
+      {renderGlossaryRows(expanded)}
     </>
   );
 }

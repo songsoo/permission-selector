@@ -14,8 +14,8 @@ import Portal from "../lib/Portal.jsx";
 import { normalize, highlight } from "../lib/text.jsx";
 import {
   parseGlossaryText,
-  mergeGlossaryTerms,
   stripGlossaryMarkers,
+  mergeGlossaryTerms,
   GlossaryNotes,
 } from "../lib/glossary.jsx";
 import { computeOrphanPerms } from "../lib/tree.js";
@@ -64,13 +64,13 @@ function PermCard({
   const descRef = useRef(null);
   const staticRef = useRef(null);
 
-  const nameTerms = useMemo(() => parseGlossaryText(p.label).terms, [p.label]);
-  const descNodes = useMemo(
-    () => parseGlossaryText(p.label, query).nodes,
+  const { nodes: descNodes, terms: nameTerms } = useMemo(
+    () => parseGlossaryText(p.label, query),
     [p.label, query],
   );
-  const hasContent =
-    p.helpText || (showMenuHelpText && p.menuHelpText) || nameTerms.length > 0;
+  const hasHelpContent =
+    Boolean(p.helpText) || (showMenuHelpText && Boolean(p.menuHelpText));
+  const hasContent = hasHelpContent || nameTerms.length > 0;
 
   const MARQUEE_GAP = 32; // .perm-desc-copy의 padding-right와 일치해야 함
   const MARQUEE_SPEED = 60; // px/s
@@ -233,12 +233,7 @@ function PermCard({
                     </span>
                   </>
                 )}
-                <GlossaryNotes
-                  terms={glossaryTerms}
-                  withDivider={Boolean(
-                    p.helpText || (showMenuHelpText && p.menuHelpText),
-                  )}
-                />
+                <GlossaryNotes terms={glossaryTerms} withDivider={hasHelpContent} />
               </span>
             </Portal>
           );

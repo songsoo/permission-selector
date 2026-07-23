@@ -81,6 +81,17 @@
   flex-direction: column;
 }
 
+.edit-sc-global-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
 .edit-list-top {
   padding: 12px 14px 8px;
   border-bottom: 1px solid var(--border);

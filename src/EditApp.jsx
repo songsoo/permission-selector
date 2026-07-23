@@ -4,6 +4,7 @@ import { HELP_TEXTS } from "./data/helpTexts.js";
 import { SHORTCUTS } from "./data/shortcuts.js";
 import { GLOSSARY } from "./data/glossary.js";
 import { CONTACT } from "./data/contact.js";
+import { SETTINGS } from "./data/settings.js";
 import {
   HiddenBadge,
   flatPermissions,
@@ -48,6 +49,29 @@ export default function EditApp({ onExit }) {
       ? "menutree"
       : saved || "menutree";
   });
+
+  // 키워드 칩 표시 여부 — src/data/settings.js에 저장되어 빌드 결과물에도 반영됨
+  const [chipsEnabled, setChipsEnabled] = useState(SETTINGS.chipsEnabled);
+  async function handleToggleChipsEnabled(e) {
+    const val = e.target.checked;
+    setChipsEnabled(val);
+    try {
+      const res = await fetch("/__write-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...SETTINGS, chipsEnabled: val }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error);
+      }
+      SETTINGS.chipsEnabled = val;
+    } catch (err) {
+      setChipsEnabled(!val);
+      setSaveMsg({ type: "err", text: String(err) });
+      setTimeout(() => setSaveMsg(null), 3000);
+    }
+  }
 
   // menutree 저장 후 MENUS_DATA가 in-place로 바뀌면, 아래 useMemo들을 다시 계산시키기 위한 카운터
   const [menusVersion, setMenusVersion] = useState(0);
@@ -883,6 +907,14 @@ export default function EditApp({ onExit }) {
       {tab === "shortcuts" ? (
         <div class="edit-body">
           <div class="edit-list-col">
+            <label class="edit-sc-global-toggle">
+              <input
+                type="checkbox"
+                checked={chipsEnabled}
+                onChange={handleToggleChipsEnabled}
+              />
+              메뉴 트리에 키워드 칩 표시
+            </label>
             <div class="edit-list-top">
               <input
                 class="edit-list-search"

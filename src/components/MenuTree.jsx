@@ -572,6 +572,7 @@ function TreeNode({
   showHidden,
   onJumpToMenu,
   onLeafSelected,
+  chipsEnabled,
 }) {
   const leaf = isLeaf(node);
   const isSelected = state.selectedMenuSeqs.has(node.nodeId);
@@ -605,7 +606,9 @@ function TreeNode({
   }
 
   const indent = Math.min(depth * 16, 64);
-  const chips = (node.shortcuts ?? []).filter((sc) => sc.label.trim());
+  const chips = chipsEnabled
+    ? (node.shortcuts ?? []).filter((sc) => sc.label.trim())
+    : [];
 
   return (
     <>
@@ -714,13 +717,14 @@ function TreeNode({
             showHidden={showHidden}
             onJumpToMenu={onJumpToMenu}
             onLeafSelected={onLeafSelected}
+            chipsEnabled={chipsEnabled}
           />
         ))}
     </>
   );
 }
 
-function MenuTree({ state, dispatch, onLeafSelected }, ref) {
+function MenuTree({ state, dispatch, onLeafSelected, chipsEnabled = true }, ref) {
   const [openMap, setOpenMap] = useState({});
   const [showHidden, setShowHidden] = useState(false);
   const query = state.menuSearch;
@@ -1008,6 +1012,7 @@ function MenuTree({ state, dispatch, onLeafSelected }, ref) {
                 showHidden={showHidden}
                 onJumpToMenu={handleJumpToMenu}
                 onLeafSelected={onLeafSelected}
+                chipsEnabled={chipsEnabled}
               />
             ))}
           </ul>

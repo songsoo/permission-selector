@@ -3,6 +3,7 @@ import { lazy, Suspense } from "preact/compat";
 import { initialState, reducer } from "./lib/state.js";
 import { parseMenus } from "./lib/jsonLoader.js";
 import { validate } from "./lib/validate.js";
+import { SETTINGS } from "./data/settings.js";
 import {
   generateClipboardText,
   generateClipboardHtml,
@@ -222,6 +223,7 @@ export default function App() {
   const [menuHeightPct, setMenuHeightPct] = useState(
     () => Number(localStorage.getItem(LAYOUT_SPLIT_KEY)) || 62,
   );
+  const [chipsEnabled, setChipsEnabled] = useState(SETTINGS.chipsEnabled);
   const isMobile = useIsMobile();
   const [mobilePage, setMobilePage] = useState(0); // 0: 메뉴, 1: 상세권한
   const [cartOpen, setCartOpen] = useState(false);
@@ -372,6 +374,7 @@ export default function App() {
         <EditApp
           onExit={() => {
             dispatch({ type: "SET_MENUS", menus: parseMenus(MENUS_DATA) });
+            setChipsEnabled(SETTINGS.chipsEnabled);
             setEditing(false);
           }}
         />
@@ -467,6 +470,7 @@ export default function App() {
                   state={state}
                   dispatch={dispatch}
                   onLeafSelected={() => setMobilePage(1)}
+                  chipsEnabled={chipsEnabled}
                 />
               </div>
             </div>
@@ -488,7 +492,11 @@ export default function App() {
                   layoutStacked ? { flexBasis: `${menuHeightPct}%` } : undefined
                 }
               >
-                <MenuTree state={state} dispatch={dispatch} />
+                <MenuTree
+                  state={state}
+                  dispatch={dispatch}
+                  chipsEnabled={chipsEnabled}
+                />
               </div>
               {layoutStacked && (
                 <ResizeHandle key="resize-handle" onDrag={setMenuHeightPct} />

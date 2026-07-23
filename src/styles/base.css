@@ -136,6 +136,12 @@ input {
   text-decoration: underline dotted currentColor;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
+  border-radius: 3px;
+}
+
+.glossary-term:hover {
+  background: var(--brand-soft);
+  color: var(--brand-text);
 }
 
 /* Edit 페이지 전용 — 상세 권한 이름 등에서 [[용어]] 태그를 눈에 띄게 구분 표시 */

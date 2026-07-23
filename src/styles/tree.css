@@ -6,6 +6,7 @@
 
 .tree-node {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   padding: 5px 16px;
@@ -107,7 +108,8 @@
 
 .tree-node-name-wrap {
   flex: 1;
-  min-width: 0;
+  /* 메뉴 이름은 최소 이 너비까지는 확보하고, 그래도 chip이 남으면 chip들을 다음 줄로 내린다 */
+  min-width: 60px;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -431,9 +433,11 @@
 
 .tree-node-chips {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 3px;
   flex-shrink: 0;
+  max-width: 100%;
 }
 
 .tree-node-chip {
